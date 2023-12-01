@@ -1,0 +1,5 @@
+*.exe
+*.o
+*.hi
+inputs/
+cheat-sheet.md

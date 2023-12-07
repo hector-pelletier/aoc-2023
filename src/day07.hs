@@ -5,28 +5,28 @@ import Data.List (sortBy, elemIndex)
 bid :: String -> (String, Int)
 bid s = (h, read b) where [h, b] = words s
 
-tblComp :: String -> String -> String -> Ordering
-tblComp tbl h1 h2 = compare (strengths h1) (strengths h2)
+cardsComp :: String -> String -> String -> Ordering
+cardsComp tbl c1 c2 = compare (strengths c1) (strengths c2)
     where strengths = map (flip elemIndex tbl)
 
-counts :: String -> [Int]
-counts c = rCounts [0] c where
-    rCounts acc [] = sortBy (flip compare) acc
-    rCounts acc h@(c:cs) = rCounts ((length $ filter (==c) $ h):acc) (filter (/=c) cs)
+hand :: String -> [Int]
+hand cards = recHand [0] cards where
+    recHand acc [] = sortBy (flip compare) acc
+    recHand acc h@(c:cs) = recHand ((length $ filter (==c) $ h):acc) (filter (/=c) cs)
 
-bestCard :: String -> [Int]
-bestCard hand = (head cards + nJ):(tail cards)
-    where nJ    = length $ filter (=='J') $ hand
-          cards = counts $ filter (/='J') $ hand
+bestHand :: String -> [Int]
+bestHand cards = (head partialHand + nJ):(tail partialHand)
+    where nJ          = length $ filter (=='J') $ cards
+          partialHand = hand   $ filter (/='J') $ cards
 
 winnings :: [(String, Int)] -> Int
 winnings = (foldl (\s (a, b) -> s + a * b) 0) . (zip [1..]) . (map snd)
 
 handComp :: (String -> [Int]) -> String -> (String, a) -> (String, a) -> Ordering
-handComp card tbl (h1, _) (h2, _) = (compare (card h1) (card h2)) `mappend` (tblComp tbl h1 h2)
+handComp hand tbl (c1, _) (c2, _) = (compare (hand c1) (hand c2)) `mappend` (cardsComp tbl c1 c2)
 
 main :: IO ()
 main = do
-    hands <- map bid <$> lines <$> getContents 
-    print $ winnings $ sortBy (handComp counts   "23456789TJQKA") $ hands 
-    print $ winnings $ sortBy (handComp bestCard "J23456789TQKA") $ hands
+    bids <- map bid <$> lines <$> getContents 
+    print $ winnings $ sortBy (handComp hand     "23456789TJQKA") $ bids 
+    print $ winnings $ sortBy (handComp bestHand "J23456789TQKA") $ bids

@@ -29,32 +29,11 @@ trackFrom grid (i,j) mv track
     | otherwise = track
     where c = grid Map.! (i,j)
 
-findS :: Map (Int, Int) Char -> (Int, Int) -> Char
-findS grid (i,j)
-    | n && s = '|'
-    | n && w = 'J'
-    | n && e = 'L'
-    | s && w = '7'
-    | s && e = 'F'
-    | otherwise = '-'
-    where n = (Map.findWithDefault '#' (i-1, j) grid) `elem` ['|','F','7']
-          s = (Map.findWithDefault '#' (i+1, j) grid) `elem` ['|','J','L']
-          e = (Map.findWithDefault '#' (i, j+1) grid) `elem` ['-','J','7']
-          w = (Map.findWithDefault '#' (i, j-1) grid) `elem` ['-','F','L']
+area :: Map (Int, Int) (Int, Int) -> Int
+area track = (flip div) 2 $ abs $ Map.foldrWithKey (\(i,j) (k,l) s -> s + i * l - j * k) 0 $ track
 
-isIn :: Map (Int, Int) Char -> Map (Int, Int) (Int, Int) -> Char -> (Int, Int) -> Bool
-isIn grid track ssym (i, j) = 
-    if (Map.member (i,j) track) then False else ((probe 0 0 '#') `mod` 2 == 1)
-    where probe d n s
-            | d == i = n
-            | onTrack && (sym == '-') = probe (d+1) (n+1) '#'
-            | onTrack && (sym == 'F') = probe (d+1) n 'F'
-            | onTrack && (sym == '7') = probe (d+1) n '7'
-            | onTrack && (sym == 'J') = probe (d+1) (if s == 'F' then n+1 else n) '#'
-            | onTrack && (sym == 'L') = probe (d+1) (if s == '7' then n+1 else n) '#'
-            | otherwise = probe (d+1) n s
-            where onTrack = Map.member (d,j) track
-                  sym = if grid Map.! (d,j) == 'S' then ssym else grid Map.! (d,j)
+points :: Map (Int, Int) (Int, Int) -> Int
+points track = (area track) - (Map.size track `div` 2) + 1
 
 main :: IO ()
 main = do
@@ -62,4 +41,4 @@ main = do
     let (p, mv) = findStart grid start
     let track = trackFrom grid p mv (Map.singleton start p)
     print $ (Map.size track) `div` 2
-    print $ length $ filter (isIn grid track (findS grid start)) $ Map.keys $ grid
+    print $ points $ track

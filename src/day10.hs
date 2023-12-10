@@ -13,8 +13,8 @@ gridFrom l = aux Map.empty (0,0) 0 0 l
 
 findStart :: Map (Int, Int) Char -> (Int, Int) -> ((Int,Int), Char)
 findStart grid (i,j)
-    | n == '|' || n == '7' || n == 'F' = ((i-1, j), 'N')
-    | s == '|' || s == 'J' || s == 'L' = ((i+1, j), 'S')
+    | n `elem` ['|','7','F'] = ((i-1, j), 'N')
+    | s `elem` ['|','J','L'] = ((i+1, j), 'S')
     | otherwise = ((i, j+1), 'E') -- N, S are not in the cycle, so E is.
     where n = Map.findWithDefault '#' (i-1, j) grid
           s = Map.findWithDefault '#' (i+1, j) grid

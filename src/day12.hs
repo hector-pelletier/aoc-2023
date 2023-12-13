@@ -2,9 +2,6 @@
 
 import Data.List (intercalate)
 
-import Data.Map (Map)
-import qualified Data.Map as Map
-
 split :: String -> [Int]
 split s = case dropWhile (==',') s of
                 "" -> []
@@ -14,6 +11,7 @@ split s = case dropWhile (==',') s of
 parsePicross :: [String] -> (String, [Int])
 parsePicross [m1, m2] = (m1, split m2)
 
+possibilities :: (String, [Int]) -> Int
 possibilities (grid, ins) = 
     let lgrid = length grid
         lins  = length ins
@@ -23,18 +21,24 @@ possibilities (grid, ins) =
             where partial_poss hash
                         | [] == il = if '#' `elem` rg then 0 else 1
                         | (sum il + ni - 1) > (length rg) = 0 
-                        | otherwise = ( if (head rg == '#') || (length rg == 1) then 0 else mem_poss (encode (p+1) ni) ) 
-                                        + 
-                                      ( if ('.' `elem` (take (head il) rg)) || ((length rg > (head il)) && ((rg !! (head il)) == '#'))          
-                                        then 0
-                                        else ( if length rg > (head il + 1)
-                                               then mem_poss (encode (p + (head il) + 1) (ni - 1))
-                                               else (if (ni /= 1) || ((length rg) < (head il)) then 0 else 1)))
+                        | otherwise = 
+                            ( if (head rg == '#') || (length rg == 1) then 0 else mem_poss (encode (p+1) ni) ) 
+                            + 
+                            ( if ('.' `elem` (take (head il) rg)) || ((length rg > (head il)) && ((rg !! (head il)) == '#'))          
+                              then 0
+                              else ( if length rg > (head il + 1)
+                                     then mem_poss (encode (p + (head il) + 1) (ni - 1))
+                                     else ( if (ni /= 1) || ((length rg) < (head il)) 
+                                            then 0 
+                                            else 1 ) 
+                                    )
+                            )
                     where   (p, ni) = decode hash
                             il    = drop (lins - ni) ins
                             rg    = drop p grid
     in mem_poss ((lgrid) * (lins + 1) - 1)
 
+goldPossibilities :: (String, [Int]) -> Int
 goldPossibilities (grid, ins) = possibilities (longGrid, longIns)
     where longGrid = intercalate "?" (replicate 5 grid)
           longIns = concat (replicate 5 ins)
